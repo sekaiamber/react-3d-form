@@ -1,0 +1,71 @@
+@import '../../const.scss';
+
+.react-3d-form.react-3d-form-progress {
+  .bar {
+    .bar-face {
+      &.percentage::before {
+        content: '';
+        display: block;
+        position: absolute;
+        bottom: 0;
+        height: 100%;
+        margin: 0;
+        transition: width .6s ease-in-out;
+        font-size: .25em;
+        line-height: 4em;
+        box-sizing: border-box;
+        color: rgba($dark, .8);
+        transition: all $sides-transition-duration ease-out;
+      }
+    }
+
+    .bar-tooltip {
+      height: 100%;
+      position: relative;
+      font-size: .5em;
+      transition: all $sides-transition-duration ease-out;
+
+      .bar-tooltip-container {
+        position: absolute;
+        right: 0;
+        top: 100%;
+        transform: translateX(50%);
+        font-size: 1em;
+        padding-top: .2em;
+        margin-top: .2em;
+
+        .bar-tooltip-text {
+          background-color: $white;
+          color: $dark;
+          box-shadow: 0 0.08em 0.1em 0em rgba(0, 0, 0, 0.2), 0 0.1em 1.6em rgba(0, 0, 0, 0.2);
+          font-size: .4em;
+          padding: .8em;
+        }
+
+        &::before {
+          content: '';
+          height: 0;
+          width: 0;
+          border: .6em solid transparent;
+          border-bottom-color: $white;
+          border-top-width: 0;
+          transition: all 0.5s ease-out;
+          display: inline-block;
+          font-size: .5em;
+          position: absolute;
+          left: 50%;
+          top: 0;
+          transform: translateX(-50%);
+        }
+      }
+    }
+
+    @for $i from 0 to 101 {
+      &[aria-valuenow='#{$i}'] {
+        .percentage::before {
+          width: $i * 1%;
+        }
+      }
+    }
+  }
+}
