@@ -6,7 +6,7 @@ import {
 export default class Index extends React.Component {
   render() {
     return (
-      <Progress />
+      <Progress width={300} value={30} skin="cyan" />
     );
   }
 }
