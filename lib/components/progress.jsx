@@ -1,9 +1,5 @@
-import React from 'react';
+// import React from 'react';
+import Box from '../utils/box';
 
-export default class Progress extends React.Component {
-  render() {
-    return (
-      <div>222</div>
-    );
-  }
+export default class Progress extends Box {
 }

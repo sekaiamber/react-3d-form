@@ -1,0 +1,97 @@
+@import '../const.scss';
+
+.react-3d-form-factor {
+  font-size: $factor-size + em;
+  padding: 1em .2em 0;
+  flex: 0 1 100%;
+}
+
+.react-3d-form {
+  font-size: 1em;
+  text-align: center;
+  width: 100%;
+  height: 1em;
+  perspective: 12em;
+  perspective-origin: 50% 50%;
+}
+
+.bar {
+  font-size: 1em;
+  position: relative;
+  display: inline-block;
+  width: 4em;
+  height: 1em;
+  transition: all $sides-transition-duration ease-in-out;
+  transform-style: preserve-3d;
+
+  &.has-rotation
+  {
+    transform: rotateX(60deg);
+  }
+
+  .bar-face {
+    display: inline-block;
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    box-sizing: border-box;
+
+    background-color: rgba($navy, .3);
+    backface-visibility: visible;
+    transition: transform $sides-transition-duration ease-out;
+
+    transform-origin: 50% 100%;
+
+    &.roof {
+      transform: translateZ(1em);
+      transition-delay: $sides-transition-duration * 4;
+    }
+    &.front {
+      transform: rotateX(-90deg);
+      transition-delay: 0s;
+    }
+    &.right {
+      left: auto;
+      right: 0;
+      width: 1em;
+      transform: rotateX(-90deg) rotateY(90deg) translateX(.5em) translateZ(.5em);
+      transition-delay: $sides-transition-duration;
+    }
+    &.back {
+      transform: rotateX(-90deg) rotateY(0deg) translateZ(-1em);
+      transition-delay: $sides-transition-duration * 2;
+    }
+    &.left {
+      width: 1em;
+      transform: rotateX(-90deg)rotateY(-90deg) translateX(-.5em) translateZ(.5em);
+      transition-delay: $sides-transition-duration * 3;
+    }
+
+    &.percentage:before {
+      content: '';
+      display: block;
+      position: absolute;
+      bottom: 0;
+      width: 0;
+      height: 100%;
+      margin: 0;
+      background-color: rgba($red, .8);
+      transition: width .6s ease-in-out;
+      font-size: .25em;
+      line-height: 4em;
+      box-sizing: border-box;
+      color: rgba($dark, .8);
+      transition: all $sides-transition-duration ease-out;
+    }
+  }
+
+  @for $i from 0 to 101 {
+    &[aria-valuenow='#{$i}'] {
+      .percentage:before {
+        width: $i * 1%;
+      }
+    }
+  }
+}
