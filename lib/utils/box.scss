@@ -24,11 +24,6 @@
   transition: all $sides-transition-duration ease-in-out;
   transform-style: preserve-3d;
 
-  &.has-rotation
-  {
-    transform: rotateX(60deg);
-  }
-
   .bar-face {
     display: inline-block;
     width: 100%;
@@ -67,31 +62,6 @@
       width: 1em;
       transform: rotateX(-90deg)rotateY(-90deg) translateX(-.5em) translateZ(.5em);
       transition-delay: $sides-transition-duration * 3;
-    }
-
-    &.percentage:before {
-      content: '';
-      display: block;
-      position: absolute;
-      bottom: 0;
-      width: 0;
-      height: 100%;
-      margin: 0;
-      background-color: rgba($red, .8);
-      transition: width .6s ease-in-out;
-      font-size: .25em;
-      line-height: 4em;
-      box-sizing: border-box;
-      color: rgba($dark, .8);
-      transition: all $sides-transition-duration ease-out;
-    }
-  }
-
-  @for $i from 0 to 101 {
-    &[aria-valuenow='#{$i}'] {
-      .percentage:before {
-        width: $i * 1%;
-      }
     }
   }
 }

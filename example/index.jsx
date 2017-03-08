@@ -1,4 +1,5 @@
 import React from 'react';
+import Box from '../lib/utils/box';
 import {
   Progress,
 } from '../lib';
@@ -6,7 +7,10 @@ import {
 export default class Index extends React.Component {
   render() {
     return (
-      <Progress width={300} value={30} skin="cyan" />
+      <div>
+        <Box />
+        <Progress width={300} value={90} skin="cyan" />
+      </div>
     );
   }
 }
