@@ -38,7 +38,7 @@ export default class Progress extends Box {
           <div className={barCls} style={styles.bar} aria-valuenow={this.state.percentage}>
             <div className="bar-tooltip" style={styles.tooltip}>
               <div className="bar-tooltip-container">
-                <div className="bar-tooltip-text">{this.state.percentage}%</div>
+                <div className="bar-tooltip-text">{this.props.format(this.state.percentage)}</div>
               </div>
             </div>
             <div className="bar-face roof percentage" style={styles.roof} />
@@ -59,4 +59,5 @@ Progress.defaultProps = {
   value: 0,
   minValue: 0,
   maxValue: 100,
+  format: percentage => `${percentage}%`,
 };
