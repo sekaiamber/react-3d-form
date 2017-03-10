@@ -1,0 +1,84 @@
+@import '../../const.scss';
+
+$mark-border-width: .1em;
+
+.react-3d-form.react-3d-form-slider {
+  .bar {
+    .bar-face {
+      .bar-active {
+        display: block;
+        position: absolute;
+        bottom: 0;
+        height: 100%;
+        margin: 0;
+        transition: width .6s ease-in-out;
+        font-size: .25em;
+        line-height: 4em;
+        box-sizing: border-box;
+        color: rgba($dark, .8);
+        transition: all $sides-transition-duration ease-out;
+        background-color: rgba($cyan, .5);
+        // pointer-events: none;
+      }
+    }
+
+    .bar-marks {
+      position: absolute;
+      height: 100%;
+      width: 100%;
+      left: 0;
+      top: 0;
+
+      .bar-mark {
+        position: absolute;
+        width: 0;
+        height: 100%;
+        width: 0;
+        top: 0;
+
+        &:hover{
+          .mark-border {
+            border-color: $cyan;
+            box-shadow: 0 0 10px $cyan;
+            opacity: 1;
+          }
+        }
+
+        .mark-border-container {
+          position: absolute;
+          width: $mark-border-width;
+          height: 100%;
+          left: -$mark-border-width / 2;
+        }
+
+        .mark-border {
+          opacity: 0;
+          position: absolute;
+          background-color: $cyan;
+          width: 100%;
+          height: 100%;
+          transform-origin: 50% 100%;
+          display: inline-block;
+          bottom: 0;
+          left: 0;
+          box-sizing: border-box;
+          backface-visibility: visible;
+          transition: all $sides-transition-duration ease-out;
+          transform-origin: 50% 100%;
+
+          &.roof {
+            transform: translateZ(1em);
+            cursor: pointer;
+          }
+          &.back {
+            transform: rotateX(-90deg) rotateY(0deg) translateZ(-1em);
+          }
+          &.front {
+            transform: rotateX(-90deg);
+            cursor: pointer;
+          }
+        }
+      }
+    }
+  }
+}

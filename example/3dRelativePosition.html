@@ -1,0 +1,191 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Document</title>
+  <script src="http://cdn.bootcss.com/mathjs/3.10.0/math.min.js"></script>
+  <style>
+    #container {
+      position: relative;
+      border-top: 1px dashed blue;
+    }
+    #screen {
+      font-size: 40px;
+      background-color: pink;
+      position: absolute;
+      left: 0;
+      top: 0;
+      width: 750px;
+      height: 1334px;
+      transform: matrix3d(
+        0.390312, -0.166946, 0, 0.000075,
+        0.216792, 0.23291, 0, -0.000105,
+        0, 0, 1, 0,
+        42, 159, 0, 1
+      );
+      transform-origin: 0 0 0;
+    }
+    #screen span {
+      pointer-events: none;
+    }
+    .crosshair {
+      width: 20px;
+      height: 20px;
+      position: absolute;
+      border-radius: 50%;
+      border: 3px solid blue;
+      transform: translate(-50%, -50%);
+      z-index: 1;
+    }
+    #screen-crosshair {
+      border-color: red;
+    }
+    #screen-offset-crosshair {
+      border-color: green;
+    }
+    input {
+      width: 5em;
+    }
+  </style>
+</head>
+<body>
+  <div id="readout">
+    <p>
+      Page coords relative to top-left of screen bounding box:<br>
+      <input disabled id="in-x">,
+      <input disabled id="in-y">
+    </p>
+    <p>
+      Screen local coords relative to top-left of screen according to calculation:<br>
+      <input disabled id="out-x">,
+      <input disabled id="out-y">
+    </p>
+    <p>
+      Screen local coords relative to top-left of screen according to offsetX/offsetY:<br>
+      <input disabled id="out2-x">,
+      <input disabled id="out2-y">
+    </p>
+  </div>
+
+  <div id="container">
+    <div id="container-crosshair" class="crosshair"></div>
+    <div id="screen">
+      <div id="screen-crosshair" class="crosshair"></div>
+      <div id="screen-offset-crosshair" class="crosshair"></div>
+      <span>I am the screen. Click me.</span>
+    </div>
+  </div>
+  <script>
+    $container = document.getElementById('container');
+    $containerCrosshair = document.getElementById('container-crosshair');
+    $screen = document.getElementById('screen');
+    $screenCrosshair = document.getElementById('screen-crosshair');
+    $screenOffsetCrosshair = document.getElementById('screen-offset-crosshair');
+    inX = document.getElementById('in-x');
+    inY = document.getElementById('in-y');
+    outX = document.getElementById('out-x');
+    outY = document.getElementById('out-y');
+    out2X = document.getElementById('out2-x');
+    out2Y = document.getElementById('out2-y');
+
+    // Get the inverse matrix transform
+    inverseMatrixTransform = (function() {
+      // Loop through matching CSS rules to get the transform
+      var rules = getMatchedCSSRules($screen);
+      var transform;
+      for (var i = 0; i < rules.length; i++) {
+        if (rules[i].style.transform) {
+          transform = rules[i].style.transform;
+          break;
+        }
+      }
+      
+      // Pull out the individual numbers
+      var elements = transform.match(/\(\s*(.*)\s*\)/)[1].split(/\s*,\s*/).map(function(string) {
+        return parseFloat(string);
+      });
+      
+      // CSS matrices describe a matrix
+      // top to bottom, left to right,
+      // i.e. the first four numbers
+      // are the first matrix column
+      // from top to bottom.
+      // Turn this list into an array of rows
+      // which math.js can understand
+      var rows = [[], [], [], []];
+      for (var i = 0; i < elements.length; i++) {
+        rows[i % 4][Math.floor(i / 4)] = elements[i];
+      }
+      
+      // Make a math.js matrix of the transform
+      var matrixTransform = math.matrix(rows);
+      
+      // Have math.js invert this matrix
+      return math.inv(matrixTransform);
+    })();
+
+    // Set up click listener
+    $screen.addEventListener('mousedown', function (event) {
+      var rect = $container.getBoundingClientRect();
+      var x = event.clientX - rect.left;
+      var y = event.clientY - rect.top;
+      inX.value = x;
+      inY.value = y;
+      
+      // This blue crosshair shows the clicked position directly
+      $containerCrosshair.style.left = '' + x + 'px';
+      $containerCrosshair.style.top = '' + y + 'px';
+      
+      // Build a vector
+      // and multiply it by the inverse transformation matrix
+      var vector = math.matrix([x, y, 0, 1]);
+      var result = math.multiply(inverseMatrixTransform, vector);
+      
+      // This red crosshair shows the clicked position
+      // in local coordinates via the values calculated
+      // by multiplying by the inverse transformation matrix.
+      $screenCrosshair.style.left = '' + result.get([0]) + 'px';
+      $screenCrosshair.style.top = '' + result.get([1]) + 'px';
+      outX.value = result.get([0]);
+      outY.value = result.get([1]);
+      
+      // This green crosshair shows the clicked position
+      // in local coordinates via the offsetX and offsetY properties.
+      $screenOffsetCrosshair.style.left = '' + event.offsetX + 'px';
+      $screenOffsetCrosshair.style.top = '' + event.offsetY + 'px';
+      out2X.value = event.offsetX;
+      out2Y.value = event.offsetY;
+    });
+
+    // From my answer at http://stackoverflow.com/a/36126329/496046
+    function getMatchedCSSRules(element) {
+      var i, len, matching = [], sheets = document.styleSheets;
+
+      function loopRules(rules) {
+        var i, len, rule;
+
+        for (i = 0, len = rules.length; i < len; i++) {
+          rule = rules[i];
+          if (rule instanceof CSSMediaRule) {
+            if (window.matchMedia(rule.conditionText).matches) {
+              loopRules(rule.cssRules);
+            }
+          } else if (rule instanceof CSSStyleRule) {
+            if (element.matches(rule.selectorText)) {
+              matching.push(rule);
+            }
+          }
+        }
+      };
+
+      for (i = 0, len = sheets.length; i < len; i++) {
+        loopRules(sheets[i].cssRules);
+      }
+
+      return matching;
+    }
+  </script>
+</body>
+</html>

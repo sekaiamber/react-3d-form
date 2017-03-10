@@ -6,14 +6,14 @@ import './progress.scss';
 export default class Progress extends Box {
   constructor(props) {
     super(props);
-    const { value, minValue, maxValue } = this.props;
+    const { value, min, max } = this.props;
     this.state = {
-      percentage: Math.round(((value - minValue) / (maxValue - minValue)) * 100),
+      percentage: Math.round(((value - min) / (max - min)) * 100),
     };
   }
   componentWillReceiveProps(nextProps) {
-    const { value, minValue, maxValue } = nextProps;
-    const percentage = Math.round(((value - minValue) / (maxValue - minValue)) * 100);
+    const { value, min, max } = nextProps;
+    const percentage = Math.round(((value - min) / (max - min)) * 100);
     this.setState({
       percentage,
     });
@@ -57,7 +57,7 @@ export default class Progress extends Box {
 Progress.defaultProps = {
   ...defaultProps,
   value: 0,
-  minValue: 0,
-  maxValue: 100,
+  min: 0,
+  max: 100,
   format: percentage => `${percentage}%`,
 };

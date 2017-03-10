@@ -1,6 +1,6 @@
 import React from 'react';
 import classnames from 'classnames';
-import { unit, unitCompute } from './unit';
+import { unit, unitCompute } from './index';
 import './box.scss';
 
 export default class Box extends React.Component {
