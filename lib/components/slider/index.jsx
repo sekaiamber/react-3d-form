@@ -1,44 +1,55 @@
 import React from 'react';
 import classnames from 'classnames';
 import Box, { defaultProps } from '../../utils/box';
-import { NOOP, unit } from '../../utils';
-import { getOffsetOfCurrentTarget, getNearestMark, addEventListener, getValue } from './utils';
+import { NOOP, unit, addEventListener, getValue } from '../../utils';
+import { getOffsetOfCurrentTarget, getNearestMark } from './utils';
 import SliderMark from './mark';
 import './slider.scss';
 
 export default class Slider extends Box {
+
+  getMarkByPercentage = percentage => this.state.marks[this.state.percentageMarks.indexOf(percentage)]
+  getPercentageByMark = mark => this.state.percentageMarks[this.state.marks.indexOf(mark)]
+
   constructor(props) {
     super(props);
     this.state = {
-      hoverStart: false,
-      hoverEnd: false,
-      value: props.value || (props.range ? [0, 0] : 0),
+      activeStart: false,
+      activeEnd: false,
+      value: getValue(props.value, props.defaultValue, (props.range ? [0, 0] : 0)),
+    };
+    this.state = {
+      ...this.state,
+      ...this.processProps(props, this.state.value),
     };
     this.state = {
       ...this.state,
       ...this.buildMarks(props),
-      ...this.processProps(props),
     };
   }
   componentWillReceiveProps(nextProps) {
     const { step, min, max, value } = nextProps;
     const props = this.props;
     let nextState = {};
+    // 如果在受控模式下
+    if (value !== null) {
+      nextState = {
+        ...nextState,
+        ...this.processProps(nextProps),
+      };
+    }
     // 如果需要重算marks
     if (
       step !== props.step ||
       min !== props.min ||
       max !== props.max
     ) {
-      nextState = this.buildMarks(nextProps);
-    }
-    // 如果在受控模式下
-    if (value !== null) {
-      this.setState({
+      nextState = {
         ...nextState,
-        ...this.processProps(nextProps),
-      });
+        ...this.buildMarks(nextProps),
+      };
     }
+    this.setState(nextState);
   }
 
   processProps(props, useValue) {
@@ -62,23 +73,55 @@ export default class Slider extends Box {
   }
 
   buildMarks(props) {
-    const { step, min, max } = props;
+    const { value, step, min, max, dots, range } = props;
     const diff = max - min;
     const allStep = diff / step;
     // 建立所有marks
-    const marks = [0];
+    let marks = [0];
     for (let i = 1; i < allStep + 1; i += 1) {
       marks.push(i * step);
     }
-    const percentageMarks = marks.map(m => (m - min) / diff);
+    let percentageMarks = marks.map(m => (m - min) / diff);
+    // 设置dots
+    // 设置state.value
+    let stateValue = this.state.value;
+    let percentage = this.state.percentage;
+    if (dots && Object.keys(this.props.marks).length) {
+      // 重建marks
+      const dotMarks = [];
+      const dotPercentageMarks = [];
+      const keys = Object.keys(this.props.marks).map(k => parseFloat(k));
+      for (let i = 0; i < keys.length; i += 1) {
+        const dotMark = keys[i];
+        const dotPercentageMark = percentageMarks[marks.indexOf(dotMark)];
+        if (dotMark !== undefined && dotPercentageMark !== undefined) {
+          dotMarks.push(dotMark);
+          dotPercentageMarks.push(dotPercentageMark);
+        }
+      }
+      // 重算value
+      let newPercentage;
+      let newValue;
+      if (range) {
+        newPercentage = stateValue.map(v => getNearestMark(percentageMarks[marks.indexOf(v)], dotPercentageMarks));
+        newValue = newPercentage.map(v => dotMarks[dotPercentageMarks.indexOf(v)]);
+      } else {
+        newPercentage = getNearestMark(percentageMarks[marks.indexOf(stateValue)], dotPercentageMarks);
+        newValue = dotMarks[dotPercentageMarks.indexOf(newPercentage)];
+      }
+      percentage = newPercentage;
+      stateValue = newValue;
+      marks = dotMarks;
+      percentageMarks = dotPercentageMarks;
+    }
 
-    return { marks, percentageMarks };
+    return { marks, percentageMarks, value: stateValue, percentage };
   }
 
   handleMouseUp(e) {
     const offset = getOffsetOfCurrentTarget(e.nativeEvent, e.target, e.currentTarget);
     const nearestPercentageMark = getNearestMark(offset.x / e.currentTarget.offsetWidth, this.state.percentageMarks);
-    const nearestMark = this.state.marks[this.state.percentageMarks.indexOf(nearestPercentageMark)];
+    const nearestMark = this.getMarkByPercentage(nearestPercentageMark);
     let value;
     if (this.props.range) {
       value = [this.state.value[0], this.state.value[1]];
@@ -124,21 +167,37 @@ export default class Slider extends Box {
       x: e.pageX - startPosition.x,
       y: e.pageY - startPosition.y,
     };
-    const startPercentageValue = this.state.percentageMarks[this.state.marks.indexOf(startValue)];
+    const startPercentageValue = this.getPercentageByMark(startValue);
     const changePercentageValue = startPercentageValue + (dPosition.x / this.bar.offsetWidth);
     const nearestPercentageMark = getNearestMark(changePercentageValue, this.state.percentageMarks);
-    const nearestMark = this.state.marks[this.state.percentageMarks.indexOf(nearestPercentageMark)];
+    const nearestMark = this.getMarkByPercentage(nearestPercentageMark);
     let value;
+    let activeStart = false;
+    let activeEnd = false;
     if (this.props.range) {
       value = lockValue < nearestMark ? [lockValue, nearestMark] : [nearestMark, lockValue];
+      if (value[0] === lockValue) {
+        activeEnd = true;
+      } else {
+        activeStart = true;
+      }
     } else {
       value = nearestMark;
+      activeEnd = true;
     }
 
     this.props.onChange(value);
-    this.setState(this.processProps(this.props, value));
+    this.setState({
+      activeStart,
+      activeEnd,
+      ...this.processProps(this.props, value),
+    });
   }
   handleMouseMoveEnd() {
+    this.setState({
+      activeStart: false,
+      activeEnd: false,
+    });
     this.removeDocumentEvents();
   }
 
@@ -156,36 +215,28 @@ export default class Slider extends Box {
 
   getStyles() {
     const styles = super.getStyles();
-    const barActive = {};
-    const triggerStart = {};
-    const triggerEnd = {};
-    const markBorder = {
-      roof: {},
-      back: {},
-      front: {},
-      floor: {},
-    };
-
     const { percentage } = this.state;
     const { range } = this.props;
     let { height, thickness } = this.props;
     height = unit(height);
     thickness = unit(thickness);
 
+    const barActive = {};
+    const markBorder = {
+      roof: {},
+      back: {},
+      front: {},
+      floor: {},
+    };
+    const triggerTooltip = {};
+
     if (range) {
       // barActive
       barActive.width = `${(percentage[1] * 100) - (percentage[0] * 100)}%`;
       barActive.marginLeft = `${percentage[0] * 100}%`;
-
-      // trigger
-      triggerStart.left = `${percentage[0] * 100}%`;
-      triggerEnd.left = `${percentage[1] * 100}%`;
     } else {
       // barActive
       barActive.width = `${percentage * 100}%`;
-
-      // trigger
-      triggerEnd.left = `${percentage * 100}%`;
     }
 
     // mark border
@@ -197,22 +248,21 @@ export default class Slider extends Box {
     markBorder.roof.height = thickness;
     markBorder.floor.height = thickness;
     markBorder.back.transform = `rotateX(-90deg) rotateY(0deg) translateZ(-${thickness})`;
+    // trigger tooltip
+    triggerTooltip.transform = `translateZ(${height}) translateY(-${thickness}) rotateX(-90deg)`;
 
-    return { ...styles, barActive, triggerStart, triggerEnd, markBorder };
+    return { ...styles, barActive, markBorder, triggerTooltip };
   }
 
   render() {
     const styles = this.getStyles();
-    const barCls = classnames('bar', { [this.props.skin]: true, 'hover-start': this.state.hoverStart, 'hover-end': this.state.hoverEnd });
+    const { value, activeStart, activeEnd, hoverStart, hoverEnd } = this.state;
+    const { range, skin, tipFormatter, marks } = this.props;
+    const barCls = classnames('bar', { [skin]: true, 'hover-start': hoverStart, 'hover-end': hoverEnd });
     return (
       <div className="react-3d-form-factor">
         <div className="react-3d-form react-3d-form-slider">
           <div className={barCls} style={styles.bar} ref={c => this.bar = c}>
-            <div className="bar-tooltip" style={styles.tooltip}>
-              <div className="bar-tooltip-container">
-                <div className="bar-tooltip-text">{this.props.tipFormatter(this.state.value)}</div>
-              </div>
-            </div>
             <div className="bar-face roof" style={styles.roof} onMouseUp={this.handleMouseUp.bind(this)}>
               <div className="bar-active" style={styles.barActive} />
             </div>
@@ -229,10 +279,31 @@ export default class Slider extends Box {
             </div>
             {/* marks */}
             <div className="bar-marks">
-              {this.props.range ? (
-                <SliderMark className="trigger-start" style={styles.triggerStart} borderStyle={styles.markBorder} onMouseDown={this.handleMouseDown.bind(this, 'start')} />
+              {Object.keys(marks).map((key, i) => {
+                const markvalue = this.getPercentageByMark(parseFloat(key));
+                return markvalue !== undefined ? (
+                  <SliderMark key={i} value={markvalue} borderStyle={styles.markBorder} data={marks[key]} />
+                ) : null;
+              })}
+              {/* triggers */}
+              {range ? (
+                <SliderMark
+                  className={classnames('trigger-start trigger', { active: activeStart })}
+                  value={this.getPercentageByMark(value[0])}
+                  data={tipFormatter(value[0])}
+                  borderStyle={styles.markBorder}
+                  tooltipStyle={styles.triggerTooltip}
+                  onMouseDown={this.handleMouseDown.bind(this, 'start')}
+                />
               ) : null}
-              <SliderMark className="trigger-end" style={styles.triggerEnd} borderStyle={styles.markBorder} onMouseDown={this.handleMouseDown.bind(this, 'end')} />
+              <SliderMark
+                className={classnames('trigger-end trigger', { active: activeEnd })}
+                value={this.getPercentageByMark(range ? value[1] : value)}
+                data={tipFormatter(range ? value[1] : value)}
+                borderStyle={styles.markBorder}
+                tooltipStyle={styles.triggerTooltip}
+                onMouseDown={this.handleMouseDown.bind(this, 'end')}
+              />
             </div>
           </div>
         </div>
@@ -247,11 +318,23 @@ Slider.defaultProps = {
   min: 0,
   max: 100,
   step: 1,
-  marks: [], // 刻度
+  marks: {}, // 刻度
   dots: false, // 是否只能移动到刻度上
   value: null,
-  defaultValue: 0,
+  defaultValue: null,
   onChange: NOOP,
   onAfterChange: NOOP,
   tipFormatter: value => `${value}`,
 };
+
+
+// mark example:
+// marks = {
+//   0: '0°C',
+//   15: '15°C',
+//   43: '43°C',
+//   100: {
+//     style: { ... },
+//     label: <strong>100°C</strong>,
+//   },
+// }
