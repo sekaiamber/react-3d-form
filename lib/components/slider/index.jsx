@@ -73,7 +73,7 @@ export default class Slider extends Box {
   }
 
   buildMarks(props) {
-    const { value, step, min, max, dots, range } = props;
+    const { step, min, max, dots, range } = props;
     const diff = max - min;
     const allStep = diff / step;
     // 建立所有marks
