@@ -6,6 +6,38 @@
 
 箱模型一般不直接使用，只有当你需要基于它进行二次开发的时候才用，你可以通过查阅本项目中其他的组件源码来得知它的使用。
 
+## Box Wrapper
+
+正常情况下，你需要去查看Box组件的源码来了解本项目箱模型的一些代码原理，为了更好的抽象出一些东西，我在这里增加了BoxWrapper，这是一个Box组件的高阶组件，他将包装一个逻辑上的箱模型，并将一些特定属性传入他的子组件中。
+
+这种改造使得原本的Box组件也成为一个单独的子组件，并更好的将属性控制权解耦，使得箱模型变成逻辑上的一个概念，他只包含数据，至于样式和功能，需要子组件自己决定。
+
+### 使用BoxWrapper
+
+使用如下代码来引用`BoxWrapper`,
+```javascript
+import BoxWrapper from 'react-3d-form/lib/utils/boxWrapper'
+```
+
+使用ES6语法来构造Box：
+```javascript
+// es6 syntax
+class ComposedComponent extends React.Component {
+  // ... code of ComposedComponent
+}
+
+export default BoxWrapper(ComposedComponent);
+```
+
+使用ES7修饰符来构造Box：
+```javascript
+// es7 syntax
+@BoxWrapper
+export default class ComposedComponent extends React.Component {
+  // ... code of ComposedComponent
+}
+```
+
 ## 引用
 
 ```javascript

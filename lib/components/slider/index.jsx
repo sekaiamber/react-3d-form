@@ -1,16 +1,14 @@
 import React from 'react';
 import classnames from 'classnames';
-import Box, { defaultProps } from '../../utils/box';
+import { defaultProps } from '../../utils/box';
+import boxWrapper from '../../utils/boxWrapper';
 import { NOOP, unit, addEventListener, getValue } from '../../utils';
 import { getOffsetOfCurrentTarget, getNearestMark } from './utils';
 import SliderMark from './mark';
 import './slider.scss';
 
-export default class Slider extends Box {
-
-  getMarkByPercentage = percentage => this.state.marks[this.state.percentageMarks.indexOf(percentage)]
-  getPercentageByMark = mark => this.state.percentageMarks[this.state.marks.indexOf(mark)]
-
+@boxWrapper
+export default class Slider extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
@@ -50,6 +48,49 @@ export default class Slider extends Box {
       };
     }
     this.setState(nextState);
+  }
+  getMarkByPercentage = percentage => this.state.marks[this.state.percentageMarks.indexOf(percentage)]
+  getPercentageByMark = mark => this.state.percentageMarks[this.state.marks.indexOf(mark)]
+
+  getStyles() {
+    const styles = { ...this.props.styles };
+    const { percentage } = this.state;
+    const { range } = this.props;
+    let { height, thickness } = this.props;
+    height = unit(height);
+    thickness = unit(thickness);
+
+    const barActive = {};
+    const markBorder = {
+      roof: {},
+      back: {},
+      front: {},
+      floor: {},
+    };
+    const triggerTooltip = {};
+
+    if (range) {
+      // barActive
+      barActive.width = `${(percentage[1] * 100) - (percentage[0] * 100)}%`;
+      barActive.marginLeft = `${percentage[0] * 100}%`;
+    } else {
+      // barActive
+      barActive.width = `${percentage * 100}%`;
+    }
+
+    // mark border
+    // height
+    markBorder.roof.transform = `translateZ(${height})`;
+    markBorder.front.height = height;
+    markBorder.back.height = height;
+    // thickness
+    markBorder.roof.height = thickness;
+    markBorder.floor.height = thickness;
+    markBorder.back.transform = `rotateX(-90deg) rotateY(0deg) translateZ(-${thickness})`;
+    // trigger tooltip
+    triggerTooltip.transform = `translateZ(${height}) translateY(-${thickness}) rotateX(-90deg)`;
+
+    return { ...styles, barActive, markBorder, triggerTooltip };
   }
 
   processProps(props, useValue) {
@@ -213,99 +254,54 @@ export default class Slider extends Box {
     /* eslint-enable no-unused-expressions */
   }
 
-  getStyles() {
-    const styles = super.getStyles();
-    const { percentage } = this.state;
-    const { range } = this.props;
-    let { height, thickness } = this.props;
-    height = unit(height);
-    thickness = unit(thickness);
-
-    const barActive = {};
-    const markBorder = {
-      roof: {},
-      back: {},
-      front: {},
-      floor: {},
-    };
-    const triggerTooltip = {};
-
-    if (range) {
-      // barActive
-      barActive.width = `${(percentage[1] * 100) - (percentage[0] * 100)}%`;
-      barActive.marginLeft = `${percentage[0] * 100}%`;
-    } else {
-      // barActive
-      barActive.width = `${percentage * 100}%`;
-    }
-
-    // mark border
-    // height
-    markBorder.roof.transform = `translateZ(${height})`;
-    markBorder.front.height = height;
-    markBorder.back.height = height;
-    // thickness
-    markBorder.roof.height = thickness;
-    markBorder.floor.height = thickness;
-    markBorder.back.transform = `rotateX(-90deg) rotateY(0deg) translateZ(-${thickness})`;
-    // trigger tooltip
-    triggerTooltip.transform = `translateZ(${height}) translateY(-${thickness}) rotateX(-90deg)`;
-
-    return { ...styles, barActive, markBorder, triggerTooltip };
-  }
-
   render() {
     const styles = this.getStyles();
     const { value, activeStart, activeEnd, hoverStart, hoverEnd } = this.state;
-    const { range, skin, tipFormatter, marks } = this.props;
-    const barCls = classnames('bar', { [skin]: true, 'hover-start': hoverStart, 'hover-end': hoverEnd });
+    const { range, tipFormatter, marks } = this.props;
+    const barCls = classnames('bar', { 'hover-start': hoverStart, 'hover-end': hoverEnd });
     return (
-      <div className="react-3d-form-factor">
-        <div className="react-3d-form react-3d-form-slider">
-          <div className={barCls} style={styles.bar} ref={c => this.bar = c}>
-            <div className="bar-face roof" style={styles.roof} onMouseUp={this.handleMouseUp.bind(this)}>
-              <div className="bar-active" style={styles.barActive} />
-            </div>
-            <div className="bar-face back" style={styles.back} >
-              <div className="bar-active" style={styles.barActive} />
-            </div>
-            <div className="bar-face front" style={styles.front} onMouseUp={this.handleMouseUp.bind(this)}>
-              <div className="bar-active" style={styles.barActive} />
-            </div>
-            <div className="bar-face left" style={styles.left} />
-            <div className="bar-face right" style={styles.right} />
-            <div className="bar-face floor" style={styles.floor} >
-              <div className="bar-active" style={styles.barActive} />
-            </div>
-            {/* marks */}
-            <div className="bar-marks">
-              {Object.keys(marks).map((key, i) => {
-                const markvalue = this.getPercentageByMark(parseFloat(key));
-                return markvalue !== undefined ? (
-                  <SliderMark key={i} value={markvalue} borderStyle={styles.markBorder} data={marks[key]} />
-                ) : null;
-              })}
-              {/* triggers */}
-              {range ? (
-                <SliderMark
-                  className={classnames('trigger-start trigger', { active: activeStart })}
-                  value={this.getPercentageByMark(value[0])}
-                  data={tipFormatter(value[0])}
-                  borderStyle={styles.markBorder}
-                  tooltipStyle={styles.triggerTooltip}
-                  onMouseDown={this.handleMouseDown.bind(this, 'start')}
-                />
-              ) : null}
-              <SliderMark
-                className={classnames('trigger-end trigger', { active: activeEnd })}
-                value={this.getPercentageByMark(range ? value[1] : value)}
-                data={tipFormatter(range ? value[1] : value)}
-                borderStyle={styles.markBorder}
-                tooltipStyle={styles.triggerTooltip}
-                onMouseDown={this.handleMouseDown.bind(this, 'end')}
-              />
-            </div>
-          </div>
+      <div className={barCls} style={styles.bar} ref={c => this.bar = c}>
+        <div className="bar-face roof" style={styles.roof} onMouseUp={this.handleMouseUp.bind(this)}>
+          <div className="bar-active" style={styles.barActive} />
+        </div>
+        <div className="bar-face back" style={styles.back} >
+          <div className="bar-active" style={styles.barActive} />
+        </div>
+        <div className="bar-face front" style={styles.front} onMouseUp={this.handleMouseUp.bind(this)}>
+          <div className="bar-active" style={styles.barActive} />
+        </div>
+        <div className="bar-face left" style={styles.left} />
+        <div className="bar-face right" style={styles.right} />
+        <div className="bar-face floor" style={styles.floor} >
+          <div className="bar-active" style={styles.barActive} />
+        </div>
+        {/* marks */}
+        <div className="bar-marks">
+          {Object.keys(marks).map((key, i) => {
+            const markvalue = this.getPercentageByMark(parseFloat(key));
+            return markvalue !== undefined ? (
+              <SliderMark key={i} value={markvalue} borderStyle={styles.markBorder} data={marks[key]} />
+            ) : null;
+          })}
+          {/* triggers */}
+          {range ? (
+            <SliderMark
+              className={classnames('trigger-start trigger', { active: activeStart })}
+              value={this.getPercentageByMark(value[0])}
+              data={tipFormatter(value[0])}
+              borderStyle={styles.markBorder}
+              tooltipStyle={styles.triggerTooltip}
+              onMouseDown={this.handleMouseDown.bind(this, 'start')}
+            />
+          ) : null}
+          <SliderMark
+            className={classnames('trigger-end trigger', { active: activeEnd })}
+            value={this.getPercentageByMark(range ? value[1] : value)}
+            data={tipFormatter(range ? value[1] : value)}
+            borderStyle={styles.markBorder}
+            tooltipStyle={styles.triggerTooltip}
+            onMouseDown={this.handleMouseDown.bind(this, 'end')}
+          />
         </div>
       </div>
     );
