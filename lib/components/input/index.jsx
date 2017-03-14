@@ -1,10 +1,10 @@
 import React from 'react';
 import classnames from 'classnames';
-import { NOOP, unit, unitCompute } from '../../utils';
+import { unit, unitCompute, getAllReactEvent } from '../../utils';
 import Box, { defaultProps } from '../../utils/box';
 import './input.scss';
 
-export default class Progress extends Box {
+export default class Input extends Box {
 
   handleClick() {
     this.input.focus();
@@ -28,6 +28,14 @@ export default class Progress extends Box {
   render() {
     const styles = this.getStyles();
     const barCls = classnames('bar', { [this.props.skin]: true });
+    const props = this.props;
+    let inputProps = getAllReactEvent(props);
+    inputProps = {
+      ...inputProps,
+      value: props.value,
+      defaultValue: props.defaultValue,
+      id: props.id,
+    };
     return (
       <div className="react-3d-form-factor">
         <div className="react-3d-form react-3d-form-input">
@@ -39,7 +47,7 @@ export default class Progress extends Box {
             <div className="bar-face right" style={styles.right} />
             <div className="bar-face floor percentage" style={styles.floor} />
             <div className="input-container" style={styles.input} >
-              <input type="text" ref={c => this.input = c} />
+              <input type="text" ref={c => this.input = c} {...inputProps} />
             </div>
           </div>
         </div>
@@ -48,8 +56,13 @@ export default class Progress extends Box {
   }
 }
 
-Progress.defaultProps = {
+Input.defaultProps = {
   ...defaultProps,
-  value: 0,
-  onChange: NOOP,
+  value: undefined,
+  defaultValue: undefined,
+  id: undefined,
+  addonBefore: undefined,
+  addonAfter: undefined,
+  prefix: undefined,
+  suffix: undefined,
 };
