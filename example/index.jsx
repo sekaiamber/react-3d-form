@@ -21,7 +21,7 @@ export default class Index extends React.Component {
     this.state = {
       processValue: 0,
       sliderValue: [1, 28],
-      inputValue: 'fuck',
+      inputValue: 'input',
     };
   }
   handleProcessChange() {
@@ -43,7 +43,7 @@ export default class Index extends React.Component {
   render() {
     return (
       <div>
-        <Box />
+        <Box height={50} />
         <Progress width={300} value={this.state.processValue} />
         <button onClick={this.handleProcessChange.bind(this)} >Change</button>
         <Slider range dots width={300} max={42} value={this.state.sliderValue} onChange={this.handleSliderChange.bind(this)} marks={sliderMarks} tipFormatter={value => `${value}°C`} />
