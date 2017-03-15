@@ -26,7 +26,7 @@ export default class Slider extends React.Component {
     };
   }
   componentWillReceiveProps(nextProps) {
-    const { step, min, max, value } = nextProps;
+    const { step, min, max, value, dots, marks } = nextProps;
     const props = this.props;
     let nextState = {};
     // 如果在受控模式下
@@ -47,10 +47,20 @@ export default class Slider extends React.Component {
         ...this.buildMarks(nextProps),
       };
     }
+    // 如果受控模式下`dots = true`时value不在mark上需重算value
+    if (dots && Object.keys(marks).length && !this.isStateValueEqualTo(value)) {
+      nextState = {
+        ...nextState,
+        ...this.computeValue(nextState.value, nextState.percentage),
+      };
+    }
     this.setState(nextState);
   }
   getMarkByPercentage = percentage => this.state.marks[this.state.percentageMarks.indexOf(percentage)]
   getPercentageByMark = mark => this.state.percentageMarks[this.state.marks.indexOf(mark)]
+  /* eslint-disable */
+  isStateValueEqualTo = compare => this.props.range ? compare[0] === this.state.value[0] && compare[1] === this.state.value[1] : compare === this.state.value;
+  /* eslint-enable */
 
   getStyles() {
     const styles = { ...this.props.styles };
@@ -114,19 +124,20 @@ export default class Slider extends React.Component {
   }
 
   buildMarks(props) {
-    const { step, min, max, dots, range } = props;
+    const { step, min, max, dots } = props;
     const diff = max - min;
     const allStep = diff / step;
     // 建立所有marks
-    let marks = [0];
+    const marks = [0];
     for (let i = 1; i < allStep + 1; i += 1) {
       marks.push(i * step);
     }
-    let percentageMarks = marks.map(m => (m - min) / diff);
+    const percentageMarks = marks.map(m => (m - min) / diff);
     // 设置dots
     // 设置state.value
-    let stateValue = this.state.value;
-    let percentage = this.state.percentage;
+    const stateValue = this.state.value;
+    const percentage = this.state.percentage;
+    let newState = { marks, percentageMarks };
     if (dots && Object.keys(this.props.marks).length) {
       // 重建marks
       const dotMarks = [];
@@ -141,22 +152,29 @@ export default class Slider extends React.Component {
         }
       }
       // 重算value
-      let newPercentage;
-      let newValue;
-      if (range) {
-        newPercentage = stateValue.map(v => getNearestMark(percentageMarks[marks.indexOf(v)], dotPercentageMarks));
-        newValue = newPercentage.map(v => dotMarks[dotPercentageMarks.indexOf(v)]);
-      } else {
-        newPercentage = getNearestMark(percentageMarks[marks.indexOf(stateValue)], dotPercentageMarks);
-        newValue = dotMarks[dotPercentageMarks.indexOf(newPercentage)];
-      }
-      percentage = newPercentage;
-      stateValue = newValue;
-      marks = dotMarks;
-      percentageMarks = dotPercentageMarks;
+      const newValueState = this.computeValue(stateValue, percentage, dotMarks, dotPercentageMarks);
+      newState = {
+        ...newValueState,
+        marks: dotMarks,
+        percentageMarks: dotPercentageMarks,
+      };
     }
 
-    return { marks, percentageMarks, value: stateValue, percentage };
+    return newState;
+  }
+
+  computeValue(useValue = this.state.value, usePercentage = this.state.percentage, useMarks = this.state.marks, usePercentageMarks = this.state.percentageMarks) {
+    const { range } = this.props;
+    let percentage;
+    let value;
+    if (range) {
+      percentage = useValue.map((v, i) => getNearestMark(usePercentage[i], usePercentageMarks));
+      value = percentage.map(v => useMarks[usePercentageMarks.indexOf(v)]);
+    } else {
+      percentage = getNearestMark(usePercentage, usePercentageMarks);
+      value = useMarks[usePercentageMarks.indexOf(percentage)];
+    }
+    return { value, percentage };
   }
 
   handleMouseUp(e) {
