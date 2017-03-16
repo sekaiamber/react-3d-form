@@ -15,11 +15,11 @@ export default class Input extends React.Component {
     width = unit(width);
     const halfHeight = unitCompute(height, v => v / 2);
     // input
-    const input = {};
-    input.transform = `translateZ(${halfHeight}) rotateX(-90deg)`;
-    input.height = height;
-    input.width = width;
-    return { ...styles, input };
+    const inputContainer = {};
+    inputContainer.transform = `translateZ(${halfHeight}) rotateX(-90deg)`;
+    inputContainer.height = height;
+    inputContainer.width = width;
+    return { ...styles, inputContainer };
   }
 
   handleClick() {
@@ -36,7 +36,12 @@ export default class Input extends React.Component {
       value: props.value,
       defaultValue: props.defaultValue,
       id: props.id,
+      style: {
+        ...props.inputStyle,
+        ...styles.input,
+      },
     };
+    const inputCls = classnames('input-container', { 'has-prefix': props.prefix, 'has-suffix': props.suffix });
     return (
       <div className={barCls} style={styles.bar}>
         <div className="bar-face roof percentage" style={styles.roof} onClick={this.handleClick.bind(this)} />
@@ -45,8 +50,16 @@ export default class Input extends React.Component {
         <div className="bar-face left" style={styles.left} />
         <div className="bar-face right" style={styles.right} />
         <div className="bar-face floor percentage" style={styles.floor} />
-        <div className="input-container" style={styles.input} >
-          <input type="text" ref={c => this.input = c} {...inputProps} />
+        <div className={inputCls} style={styles.inputContainer} >
+          {props.prefix ? (
+            <div className="prefix">{props.prefix}</div>
+          ) : null}
+          <div className="input-inst">
+            <input type="text" ref={c => this.input = c} {...inputProps} />
+          </div>
+          {props.suffix ? (
+            <div className="suffix">{props.suffix}</div>
+          ) : null}
         </div>
       </div>
     );
@@ -62,4 +75,5 @@ Input.defaultProps = {
   addonAfter: undefined,
   prefix: undefined,
   suffix: undefined,
+  inputStyle: {},
 };
