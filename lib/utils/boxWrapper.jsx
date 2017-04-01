@@ -3,7 +3,9 @@ import classnames from 'classnames';
 import { unit, unitCompute } from './index';
 import './box.scss';
 
-export default ComposedComponent => class extends React.Component {
+const factory = (ComposedComponent, confObj) => class extends React.Component {
+  dataMap = {}
+
   getStyles() {
     const bar = {};
     const roof = {};
@@ -49,12 +51,41 @@ export default ComposedComponent => class extends React.Component {
   render() {
     const styles = this.getStyles();
     const cls = classnames('react-3d-form', 'react-3d-form-' + ComposedComponent.name.toLowerCase(), { [this.props.skin]: true });
+    const { addonBefore, addonAfter } = confObj;
     return (
       <div className="react-3d-form-factor">
         <div className={cls}>
-          <ComposedComponent {...this.props} styles={styles} />
+          {addonBefore.map((Addon, i) => (
+            <Addon key={'addonBefore' + i} {...this.props} styles={styles} dataMap={this.dataMap} >{this.props.children}</Addon>
+          ))}
+          <ComposedComponent {...this.props} styles={styles} ref={c => this.dataMap.composedComponent = c}>{this.props.children}</ComposedComponent>
+          {addonAfter.map((Addon, i) => (
+            <Addon key={'addonBefore' + i} {...this.props} styles={styles} dataMap={this.dataMap} >{this.props.children}</Addon>
+          ))}
         </div>
       </div>
     );
   }
+};
+
+export default (obj = {}) => {
+  // @boxWrapper
+  if (React.Component.isPrototypeOf(obj)) {
+    return factory(obj, {
+      addonBefore: [],
+      addonAfter: [],
+    });
+  }
+  let { addonBefore, addonAfter } = obj;
+  addonBefore = addonBefore || [];
+  addonAfter = addonAfter || [];
+  const confObj = {
+    addonBefore,
+    addonAfter,
+  };
+  // @boxWrapper({
+  //   addonBefore: [],
+  //   addonAfter: [],
+  // })
+  return ComposedComponent => factory(ComposedComponent, confObj);
 };
