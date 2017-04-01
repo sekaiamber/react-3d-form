@@ -1,0 +1,49 @@
+@import '../../const.scss';
+
+$sides-transition-duration: 0.2s;
+
+.react-3d-form.react-3d-form-radio {
+  .bar {
+    cursor: pointer;
+
+    .bar-face {
+      &.surface::before {
+        content: '';
+        display: block;
+        position: absolute;
+        bottom: 0;
+        height: 100%;
+        margin: 0;
+        transition: width .6s ease-in-out;
+        font-size: .25em;
+        line-height: 4em;
+        box-sizing: border-box;
+        color: rgba($dark, .8);
+        transition: all $sides-transition-duration ease-out;
+        background-color: rgba($cyan, .5);
+        width: 0;
+      }
+    }
+
+    &.checked .bar-face.surface::before {
+      width: 100%;
+    }
+  }
+  
+  .radio-label-factor {
+    font-size: 1em;
+    position: relative;
+    display: inline-block;
+    height: 1em;
+    transition: all $sides-transition-duration ease-in-out;
+    transform-style: preserve-3d;
+
+    .radio-label {
+      margin-left: 0.5em;
+      position: relative;
+      top: 50%;
+      transform: translateY(-50%) rotateX(-90deg);
+      cursor: pointer;
+    }
+  }
+}
