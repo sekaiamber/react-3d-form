@@ -4,8 +4,11 @@ import {
   Progress,
   Slider,
   Input,
-  Radio,
+  RadioGroup,
 } from '../lib';
+
+const Radio = RadioGroup.Radio;
+const RadioButton = RadioGroup.RadioButton;
 
 const sliderMarks = {
   11: '11°C',
@@ -49,7 +52,16 @@ export default class Index extends React.Component {
         <button onClick={this.handleProcessChange.bind(this)} >Change</button>
         <Slider range dots width={300} max={42} value={this.state.sliderValue} onChange={this.handleSliderChange.bind(this)} marks={sliderMarks} tipFormatter={value => `${value}°C`} />
         <Input width={300} height={40} thickness={50} value={this.state.inputValue} onChange={this.handleInputChange.bind(this)} prefix="$" />
-        <Radio checked >Hangzhou</Radio>
+        <RadioGroup defaultValue="beijing">
+          <Radio value="hangzhou">Hangzhou</Radio>
+          <Radio value="beijing">Beijing</Radio>
+          <Radio value="shanghai">Shanghai</Radio>
+        </RadioGroup>
+        <RadioGroup defaultValue="beijing">
+          <RadioButton value="hangzhou">Hangzhou</RadioButton>
+          <RadioButton value="beijing">Beijing</RadioButton>
+          <RadioButton value="shanghai">Shanghai</RadioButton>
+        </RadioGroup>
       </div>
     );
   }
