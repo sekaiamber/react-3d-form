@@ -1,6 +1,6 @@
 import React from 'react';
 import classnames from 'classnames';
-import { unit, unitCompute, getAllReactEvent } from '../../utils';
+import { unit, unitCompute, getAllReactEvent, NOOP } from '../../utils';
 import { defaultProps } from '../../utils/box';
 import boxWrapper from '../../utils/boxWrapper';
 import './input.scss';
@@ -37,7 +37,6 @@ export default class Input extends React.Component {
     inputProps = {
       ...inputProps,
       value: props.value,
-      defaultValue: props.defaultValue,
       id: props.id,
       style: {
         ...props.inputStyle,
@@ -92,7 +91,8 @@ export default class Input extends React.Component {
 Input.defaultProps = {
   ...defaultProps,
   value: undefined,
-  defaultValue: undefined,
+  defaultValue: '',
+  onChange: NOOP,
   id: undefined,
   addonBefore: undefined,
   addonAfter: undefined,

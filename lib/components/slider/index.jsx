@@ -14,7 +14,7 @@ export default class Slider extends React.Component {
     this.state = {
       activeStart: false,
       activeEnd: false,
-      value: getValue(props.value, props.defaultValue, (props.range ? [0, 0] : 0)),
+      value: getValue(props.value, props.defaultValue),
     };
     this.state = {
       ...this.state,
@@ -334,8 +334,10 @@ Slider.defaultProps = {
   step: 1,
   marks: {}, // 刻度
   dots: false, // 是否只能移动到刻度上
-  value: null,
-  defaultValue: null,
+  value: undefined,
+  /* eslint-disable */
+  defaultValue: props => props.range ? [0, 0] : 0,
+  /* eslint-enable */
   onChange: NOOP,
   onAfterChange: NOOP,
   tipFormatter: value => `${value}`,
