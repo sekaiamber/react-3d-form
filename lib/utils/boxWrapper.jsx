@@ -1,10 +1,24 @@
 import React from 'react';
 import classnames from 'classnames';
-import { unit, unitCompute } from './index';
+import { unit, unitCompute, getValue, NOOP } from './index';
 import './box.scss';
 
 const factory = (ComposedComponent, confObj) => class extends React.Component {
   dataMap = {}
+
+  constructor(props) {
+    super(props);
+    this.state = {
+      value: getValue(props.value, typeof props.defaultValue === 'function' ? props.defaultValue(props) : props.defaultValue),
+    };
+  }
+
+  componentWillReceiveProps(nextProps) {
+    const { value } = nextProps;
+    this.setState({
+      value: getValue(value, this.state.value),
+    });
+  }
 
   getStyles() {
     const bar = {};
@@ -48,6 +62,18 @@ const factory = (ComposedComponent, confObj) => class extends React.Component {
     return { bar, roof, front, left, right, back, floor };
   }
 
+  handleChange(value) {
+    if (this.props.value !== undefined && this.props.value !== null) {
+      // controlled
+      this.props.onChange(value);
+    } else {
+      const newValue = value.target ? value.target.value : value;
+      this.setState({ value: newValue }, () => {
+        this.props.onChange(newValue);
+      });
+    }
+  }
+
   render() {
     const styles = this.getStyles();
     const cls = classnames('react-3d-form', 'react-3d-form-' + ComposedComponent.name.toLowerCase(), { [this.props.skin]: true });
@@ -58,7 +84,13 @@ const factory = (ComposedComponent, confObj) => class extends React.Component {
           {addonBefore.map((Addon, i) => (
             <Addon key={'addonBefore' + i} {...this.props} styles={styles} dataMap={this.dataMap} >{this.props.children}</Addon>
           ))}
-          <ComposedComponent {...this.props} styles={styles} ref={c => this.dataMap.composedComponent = c}>{this.props.children}</ComposedComponent>
+          <ComposedComponent
+            {...this.props}
+            styles={styles}
+            ref={c => this.dataMap.composedComponent = c}
+            onChange={this.handleChange.bind(this)}
+            value={this.state.value}
+          >{this.props.children}</ComposedComponent>
           {addonAfter.map((Addon, i) => (
             <Addon key={'addonBefore' + i} {...this.props} styles={styles} dataMap={this.dataMap} >{this.props.children}</Addon>
           ))}

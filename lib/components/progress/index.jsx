@@ -52,7 +52,8 @@ export default class Progress extends React.Component {
 
 Progress.defaultProps = {
   ...defaultProps,
-  value: 0,
+  value: undefined,
+  defaultValue: 0,
   min: 0,
   max: 100,
   format: percentage => `${percentage}%`,
