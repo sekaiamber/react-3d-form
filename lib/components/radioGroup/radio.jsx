@@ -1,25 +1,9 @@
 import React from 'react';
 import classnames from 'classnames';
-import { defaultProps } from '../../utils/box';
-import { getValue, NOOP, unit, unitCompute } from '../../utils';
-import boxWrapper from '../../utils/boxWrapper';
+import { NOOP, unit, unitCompute } from '../../utils';
 import './radio.scss';
 
-@boxWrapper
 export default class Radio extends React.Component {
-  constructor(props) {
-    super(props);
-    const { checked, defaultChecked } = this.props;
-    this.state = {
-      checked: getValue(checked, defaultChecked, false),
-    };
-  }
-  componentWillReceiveProps(nextProps) {
-    const { checked } = nextProps;
-    this.setState({
-      checked: getValue(checked, this.state.checked),
-    });
-  }
   getStyles() {
     const styles = { ...this.props.styles };
 
@@ -34,16 +18,13 @@ export default class Radio extends React.Component {
     return { ...styles, label };
   }
   handleClick() {
-    const checked = !this.state.checked;
-    this.setState({
-      checked,
-    });
+    this.props.onChange(this.props.value);
   }
   render() {
     const styles = this.getStyles();
-    const cls = classnames('bar', { checked: this.state.checked });
+    const cls = classnames('bar', { checked: this.props.checked });
     return (
-      <div onClick={this.handleClick.bind(this)}>
+      <div className="react-3d-form-radio" onClick={this.handleClick.bind(this)}>
         <div className={cls} style={styles.bar}>&nbsp;
           <div className="bar-face roof surface" style={styles.roof} />
           <div className="bar-face back surface" style={styles.back} />
@@ -61,9 +42,7 @@ export default class Radio extends React.Component {
 }
 
 Radio.defaultProps = {
-  ...defaultProps,
+  checked: false,
   value: undefined,
-  checked: undefined,
-  defaultChecked: undefined,
   onChange: NOOP,
 };

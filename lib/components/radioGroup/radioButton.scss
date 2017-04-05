@@ -1,0 +1,48 @@
+@import '../../const.scss';
+
+$sides-transition-duration: 0.2s;
+
+.react-3d-form.react-3d-form-radiogroup .react-3d-form-radiobutton {
+  &.bar {
+    cursor: pointer;
+
+    .bar-face {
+      &.surface::before {
+        content: '';
+        display: block;
+        position: absolute;
+        bottom: 0;
+        height: 100%;
+        margin: 0;
+        transition: opacity .6s ease-in-out;
+        font-size: .25em;
+        line-height: 4em;
+        box-sizing: border-box;
+        color: rgba($dark, .8);
+        transition: all $sides-transition-duration ease-out;
+        background-color: rgba($cyan, .5);
+        opacity: 0;
+        width: 100%;
+      }
+
+      &.left, &.right {
+        opacity: 0;
+      }
+    }
+    &:first-child .bar-face.left {
+      opacity: 1;
+    }
+    &:last-child .bar-face.right {
+      opacity: 1;
+    }
+
+    &.checked .bar-face.surface::before {
+      opacity: 1;
+    }
+  }
+
+  .radio-label {
+    margin: 0 0.5em;
+    transform-origin: 50% 0;
+  }
+}

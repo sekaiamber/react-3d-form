@@ -2,7 +2,10 @@
 
 $sides-transition-duration: 0.2s;
 
-.react-3d-form.react-3d-form-radio {
+.react-3d-form.react-3d-form-radiogroup .react-3d-form-radio {
+  display: inline-block;
+  margin: 0 0.5em;
+
   .bar {
     cursor: pointer;
 
